@@ -1,3 +1,4 @@
+
 #include "stratum.h"
 
 static int g_job_next_id = 0;
@@ -258,3 +259,4 @@ void job_broadcast(YAAMP_JOB *job)
 //
 //		maxhash = coind_nethash(job->coind)*coind_profitability(job->coind)/(g_current_algo->profit? g_current_algo->profit: 1);
 //	}
+

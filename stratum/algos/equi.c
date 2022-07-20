@@ -57,12 +57,15 @@ void equi_hash(const char* input, char* output, uint32_t len)
         /*
         uint32_t hash0[32];
         uint32_t hash1[32];
+
         sph_sha256_context ctx_sha256;
+
         sph_sha256_init(&ctx_sha256);
         sph_sha256(&ctx_sha256, input, len);
         sph_sha256_close(&ctx_sha256, hash0);
         sph_sha256(&ctx_sha256, hash0, 32);
         sph_sha256_close(&ctx_sha256, hash1);
+
         memcpy(output, hash1, 32);
         */
    

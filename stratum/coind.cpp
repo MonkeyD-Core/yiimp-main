@@ -115,8 +115,27 @@ bool coind_validate_address(YAAMP_COIND *coind)
 	sprintf(params, "[\"%s\"]", coind->wallet);
 
 	json_value *json;
-	bool getaddressinfo = false;
-	json = rpc_call(&coind->rpc, "validateaddress", params);
+	bool getaddressinfo = ((strcmp(coind->symbol,"DGB") == 0) || (strcmp(coind->symbol2, "DGB") == 0));
+
+    // BTC 0.18.x also should use getaddressinfo, bcz validateaddress haven't field "ismine"
+    if (strcmp(coind->symbol,"BTC") == 0) {
+        json = rpc_call(&coind->rpc, "getnetworkinfo", "[]");
+        if(!json) return false;
+        json_value *json_result = json_get_object(json, "result");
+        if(!json_result)
+        {
+            json_value_free(json);
+            return false;
+        }
+        int btc_version = json_get_int(json_result, "version");
+        if (btc_version >= 180100) getaddressinfo = 1;
+    }
+
+
+	if(getaddressinfo)
+		json = rpc_call(&coind->rpc, "getaddressinfo", params);
+	else
+		json = rpc_call(&coind->rpc, "validateaddress", params);
 	if(!json) return false;
 
 	json_value *json_result = json_get_object(json, "result");
@@ -126,20 +145,6 @@ bool coind_validate_address(YAAMP_COIND *coind)
 		return false;
 	}
 
-	if(!json_get_bool(json_result, "ismine"))
-	{
-		stratumlog("%s wallet is using getaddressinfo.\n", coind->name);
-		getaddressinfo = true;
-		json = rpc_call(&coind->rpc, "getaddressinfo", params);
-
-		json_result = json_get_object(json, "result");
-		if(!json_result)
-		{
-			json_value_free(json);
-			return false;
-		}
-	}
-	
 	bool isvalid = getaddressinfo || json_get_bool(json_result, "isvalid");
 	if(!isvalid) stratumlog("%s wallet %s is not valid.\n", coind->name, coind->wallet);
 
@@ -190,9 +195,9 @@ void coind_init(YAAMP_COIND *coind)
 	bool valid = coind_validate_address(coind);
 	if(valid) return;
 
-	sprintf(params, "[\"legacy\"]", account);
+	sprintf(params, "[\"%s\"]", account);
 
-	json_value *json = rpc_call(&coind->rpc, "getrawchangeaddress", params);
+	json_value *json = rpc_call(&coind->rpc, "getaccountaddress", params);
 	if(!json)
 	{
 		json = rpc_call(&coind->rpc, "getaddressesbyaccount", params);
